@@ -30,11 +30,15 @@ if flake8_check_status != 0:
     print '\033[01;31m'
     print "Flake 8 is not installed\nContinuing without flake8 test"
     print '\033[0m'
+    
 
 if flake8_check_status == 0:
     p = subprocess.Popen('git diff --cached -U0 | flake8 --diff', stdout=subprocess.PIPE, shell=True)
     (flake8_errors, flake8_errors_err) = p.communicate()
     flake8_errors_status = p.wait()
+else:
+    flake8_errors_status = 0
+
 py_warning = {}
 for py_changed_file in py_changed_files:
     p = subprocess.Popen('git diff --cached -U0 ' + py_changed_file, stdout=subprocess.PIPE, shell=True)
@@ -83,7 +87,7 @@ p = subprocess.Popen('which eslint &> /dev/null', stdout=subprocess.PIPE, shell=
 eslint_check_status = p.wait()
 if eslint_check_status != 0:
     print '\033[01;31m'
-    print "ESlint is not installed\nContinuing without flake8 test"
+    print "ESlint is not installed\nContinuing without ESLint test"
     print '\033[0m'
 
 eslint_errors = {}
@@ -133,8 +137,10 @@ for js_changed_file in js_changed_files:
                     lines_changed.add(str(int(found) + i))
 
         our_js_lines_with_error = lines_changed.intersection(eslint_error_line_lst)
-        our_error_lst = [eslint_file_check_result for eslint_file_check_result in eslint_file_check_results.split("\n") if re.findall(r'(?:' + ('|'.join(list(map(str, list(our_js_lines_with_error))))) + '):[0-9]*\s*error', eslint_file_check_result)]
-        eslint_errors[js_changed_file] = our_error_lst
+        if our_js_lines_with_error:
+            our_error_lst = [eslint_file_check_result for eslint_file_check_result in eslint_file_check_results.split("\n") if re.findall(r'(?:' + ('|'.join(list(map(str, list(our_js_lines_with_error))))) + '):[0-9]*\s*error', eslint_file_check_result)]
+        if our_js_lines_with_error and our_error_lst:
+            eslint_errors[js_changed_file] = our_error_lst
 
 
 if eslint_check_status == 0 and eslint_errors:
@@ -149,6 +155,8 @@ if eslint_check_status == 0 and eslint_errors:
         print ''
     print '\033[0m'
     print ''
+else:
+    eslint_errors = False
 
 if eslint_warning:
     print '\033[01;35m'
