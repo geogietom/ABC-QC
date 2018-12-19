@@ -30,7 +30,6 @@ if flake8_check_status != 0:
     print '\033[01;31m'
     print "Flake 8 is not installed\nContinuing without flake8 test"
     print '\033[0m'
-    
 
 if flake8_check_status == 0:
     p = subprocess.Popen('git diff --cached -U0 | flake8 --diff', stdout=subprocess.PIPE, shell=True)
